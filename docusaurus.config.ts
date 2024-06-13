@@ -18,6 +18,9 @@ const config: Config = {
   organizationName: 'callmdown', // Usually your GitHub org/user name.
   projectName: 'callmdown.github.io', // Usually your repo name.
 
+  deploymentBranch: 'deployment',
+  trailingSlash: false,
+
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 

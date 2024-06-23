@@ -1,0 +1,408 @@
+---
+title: 'Experiment #1'
+sidebar_position: 1
+---
+:::info &nbsp;
+
+## Recommending Popular Electricity Plans to a New Resident
+
+As part of our web service, we aim to provide new residents with information on popular electricity plans in their area. Our dataset includes data from over 50,000 customers for each given zip code, allowing us to identify the two most popular electricity plans among residents.
+
+When a new resident visits our website and enters their zip code, we want to present them with the two most popular electricity plans in that area. The new resident can then decide whether they want to learn more about these plans or explore other options.
+:::
+
+import Tag from '@site/src/components/Tag'
+
+
+## Summary of Libraries and Methods
+:::note 📦
+---
+### <Tag color="#FF5733">pandas (pd)</Tag> 
+
+    >  ###### <Tag color="#697476">pd.read_csv</Tag> : _Reads a CSV file into a DataFrame._
+    
+    > ###### <Tag color="#697476">DataFrame.groupby</Tag>: _Groups data by specified columns._
+    
+    > ###### <Tag color="#697476">DataFrame.pivot</Tag>: _Pivots the DataFrame to reshape it._
+    
+    > ###### <Tag color="#697476">DataFrame.fillna</Tag>: _Fills missing values._
+
+---
+
+
+### <Tag color="#FF5733">sklearn (train_test_split)</Tag> 
+
+    > ###### <Tag color="#697476">train_test_split</Tag> : _Splits data into training and testing sets._
+---
+
+### <Tag color="#FF5733">torch (torch)</Tag> 
+
+    > ###### <Tag color="#697476">torch.tensor</Tag> : _Converts data to a PyTorch tensor._
+    
+    > ###### <Tag color="#697476">torch.no_grad</Tag> : _Disables gradient calculations (useful during evaluation)._
+
+---
+
+### <Tag color="#FF5733">torch.nn (nn)</Tag> 
+
+    > ###### <Tag color="#697476">nn.Module</Tag> : _Base class for all neural network modules._
+
+    > ###### <Tag color="#697476">nn.Embedding</Tag> : _Creates an embedding layer for discrete variables._
+
+    > ###### <Tag color="#697476">nn.MSELoss</Tag> : _Mean Squared Error loss function._
+
+---
+
+### <Tag color="#FF5733">torch.optim (optim)</Tag> 
+
+    > ###### <Tag color="#697476">optim.Adam</Tag> : _Adam optimizer for updating model parameters._
+
+---
+
+### <Tag color="#FF5733">torch.utils.data (Dataset, DataLoader)</Tag> 
+
+    > ###### <Tag color="#697476">Dataset</Tag> : _Abstract class representing a dataset._
+
+    > ###### <Tag color="#697476">DataLoader</Tag> : _Provides an iterable over the dataset._       
+
+:::
+
+---
+
+
+## Step 1: Data Preparation
+
+:::danger 🤔
+***What we're doing*** : _We're organizing and preparing your data so that we can train a machine learning model._ 
+_Think of this as getting all your ingredients ready before you start cooking._
+:::
+
+:::tip 😯
+1. ***Load your data***: _We read your dataset, which is a list of customers, their zip codes, and the electricity plans they use._
+2. ***Group data***: _We count how many customers in each zip code use each electricity plan. This helps us see which plans are popular in each area._
+3. ***Create a table***: _We make a table (like a big spreadsheet) where each row is a zip code, each column is a plan, and each cell shows how many customers use that plan in that zip code._
+
+>  _We `load` the data using `pandas`, which is like opening a spreadsheet._
+
+> _We `count` how many people use each plan in each `zip code`._
+
+> _We create a `matrix (table)` where `rows` are `zip codes` and `columns` are `plans`, with cells showing counts._
+
+> _We `split` this data into training and testing sets._
+:::
+
+```python
+import pandas as pd
+from sklearn.model_selection import train_test_split
+import seaborn as sns   
+import matplotlib.pyplot as plt
+
+# Load your dataset
+# data = pd.read_csv('your_dataset.csv')
+
+# Sample data (from the previous step)
+data = {
+    'zip_code': [10001]*5 + [10002]*5 + [10003]*5 + [10004]*5,
+    'customer_id': range(1, 21),
+    'plan_id': [1, 2, 1, 2, 1, 3, 3, 4, 4, 4, 2, 2, 2, 3, 3, 1, 1, 1, 2, 2]
+}
+
+# Create a DataFrame
+df = pd.DataFrame(data)
+
+# Assuming the dataset has columns: 'zip_code', 'customer_id', 'plan_id'
+# Group by zip_code and plan_id to get the count of 
+# customers for each plan in each zip code
+plan_counts = df
+                .groupby(['zip_code', 'plan_id'])
+                .size()
+                .reset_index(name='count')
+
+# Pivot the data to create a matrix
+plan_matrix = plan_counts
+                .pivot(index='zip_code', columns='plan_id', values='count')
+                .fillna(0)
+
+ # Plot the heatmap
+
+
+# Figure Size: plt.figure(figsize=(10, 6)) sets the size of the plot. 
+# You can adjust the size as needed.
+
+# Heatmap:
+# sns.heatmap(plan_matrix, annot=True, fmt='g', cmap='viridis') creates the heatmap. 
+# Here:
+#     plan_matrix is the data to be visualized.
+    
+#     annot=True adds the counts as annotations in the heatmap cells.
+    
+#     fmt='g' specifies the format of the annotations (general format).
+    
+#     cmap='viridis' sets the color map of the heatmap. 
+#     You can choose other color maps like coolwarm, plasma, etc.
+
+# Titles and Labels: Adding titles and axis labels to make the plot informative.
+
+# Display: plt.show() displays the plot.
+
+# Split the data into training and testing sets
+
+plt.figure(figsize=(10, 6))  # Set the figure size
+sns.heatmap(plan_matrix, annot=True, fmt='g', cmap='viridis')  # Create the heatmap
+
+# Add titles and labels
+plt.title('Number of Customers per Plan by Zip Code')
+plt.xlabel('Plan ID')
+plt.ylabel('Zip Code')
+
+# Show the plot
+plt.show()
+
+train_data, test_data = train_test_split(plan_matrix, test_size=0.2, random_state=42)
+
+
+# Plot the heatmap for train_data
+plt.figure(figsize=(10, 6))  # Set the figure size
+sns.heatmap(train_data, annot=True, fmt='g', cmap='viridis')  # Create the heatmap
+
+# Add titles and labels
+plt.title('Train Data: Number of Customers per Plan by Zip Code')
+plt.xlabel('Plan ID')
+plt.ylabel('Zip Code')
+
+# Show the plot
+plt.show()
+
+
+# Plot the heatmap for test_data
+plt.figure(figsize=(10, 6))  # Set the figure size
+sns.heatmap(test_data, annot=True, fmt='g', cmap='viridis')  # Create the heatmap
+
+# Add titles and labels
+plt.title('Test Data: Number of Customers per Plan by Zip Code')
+plt.xlabel('Plan ID')
+plt.ylabel('Zip Code')
+
+# Show the plot
+plt.show()
+
+```
+
+## Step 2: Model Selection
+
+:::danger 🤔
+***What we're doing*** : _We're choosing a type of machine learning model that can learn patterns from our data._
+_In this case, we use something called "matrix factorization," which is good for recommendation systems._
+:::
+
+:::tip 😯
+1. ***Define a dataset class***: _We create a special way to handle our data so it can be used for training the model._
+2. ***Define the model***: _We set up a basic recommendation model. This model will learn how to predict which plans are popular based on the zip code._
+:::
+
+
+```python
+
+import torch  # Import PyTorch for building and training the model
+import torch.nn as nn  # Import the neural network module from PyTorch
+import torch.optim as optim  # Import optimizers from PyTorch
+# Import DataLoader and Dataset for handling data in PyTorch
+from torch.utils.data import DataLoader, Dataset  
+
+# Define a custom dataset class
+class PlanRecommendationDataset(Dataset):
+    def __init__(self, data):
+         # Convert the DataFrame values to a PyTorch tensor
+        self.data = torch.tensor(data.values, dtype=torch.float32) 
+    
+    def __len__(self):
+        return self.data.shape[0]  # Return the number of rows (zip codes)
+    
+    def __getitem__(self, idx):
+        return self.data[idx]  # Return the data at the specified index
+
+# Define the matrix factorization model
+class MatrixFactorization(nn.Module):
+    def __init__(self, num_users, num_items, num_factors=10):
+        # Initialize the parent class
+        super(MatrixFactorization, self).__init__()  
+        # Create an embedding layer for users (zip codes)
+        self.user_factors = nn.Embedding(num_users, num_factors)  
+        # Create an embedding layer for items (plans)
+        self.item_factors = nn.Embedding(num_items, num_factors)  
+        
+    def forward(self, user, item):
+        # Compute the dot product of user and item factors
+        return (self.user_factors(user) * self.item_factors(item)).sum(1)  
+
+# Get the number of zip codes and plans
+num_zip_codes, num_plans = train_data.shape
+
+# Create the dataset and dataloader
+# Create a dataset from the training data
+dataset = PlanRecommendationDataset(train_data)  
+# Create a dataloader to load the data in batches
+dataloader = DataLoader(dataset, batch_size=64, shuffle=True)  
+
+# Initialize the model, loss function, and optimizer
+# Create an instance of the model
+model = MatrixFactorization(num_zip_codes, num_plans)  
+# Use mean squared error as the loss function
+criterion = nn.MSELoss()  
+# Use the Adam optimizer to update the model parameters
+optimizer = optim.Adam(model.parameters(), lr=0.01)  
+
+
+
+```
+
+
+## Step 3: Training the Model
+:::danger 🤔
+***What we're doing*** : _We're teaching the model to understand the data._
+_This is like showing many examples to a student so they can learn the pattern._
+:::
+
+:::tip 😯
+1. ***Set up training***: _We split our data into small batches and feed these batches to the model._
+2. ***Train***: _The model looks at the data, makes guesses about which plans are popular, and learns from its mistakes. It does this many times to get better._
+:::
+
+```python
+num_epochs = 20  # Set the number of training epochs
+
+# Training loop
+for epoch in range(num_epochs):
+    model.train()  # Set the model to training mode
+    total_loss = 0  # Initialize the total loss
+    
+    # Iterate over batches of data
+    for batch in dataloader:
+        # Clear the previous gradients
+        optimizer.zero_grad()  
+        # Convert the batch to long tensor for embedding lookup
+        batch = batch.to(torch.long)  
+        
+        # Create user and item indices
+        # Repeat each user index for each item
+        user_indices = torch.arange(num_zip_codes).repeat_interleave(num_plans)  
+        # Repeat each item index for each user
+        item_indices = torch.arange(num_plans).repeat(num_zip_codes)  
+        
+        # Make predictions
+        predictions = model(user_indices, item_indices)  # Get the model predictions
+        
+        # Compute the loss
+        loss = criterion(predictions, batch.view(-1))  # Calculate the loss
+        loss.backward()  # Backpropagate the loss
+        optimizer.step()  # Update the model parameters
+        
+        # Accumulate the total loss
+        total_loss += loss.item()  
+    
+    # Print the average loss for the epoch
+    # Print the loss for the epoch
+    print(f'Epoch {epoch+1}, Loss: {total_loss / len(dataloader)}')  
+
+
+```
+
+## Step 4: Evaluation
+:::danger 🤔
+***What we're doing*** : _What we're doing: We're checking how well the model has learned. This is like giving a student a test to see how well they understand the material._
+:::
+
+:::tip 😯
+1. ***Set up evaluation***: We use a separate part of the data that the model hasn't seen before.
+2. ***Test the model***: We see how well the model predicts the popular plans on this new data. If it does well, it means the model has learned useful patterns.
+:::
+
+```python
+
+# Set the model to evaluation mode
+model.eval()  # Set the model to evaluation mode
+
+# Disable gradient calculation
+# Disable gradient calculations for evaluation
+with torch.no_grad():  
+    # Create a dataset from the test data
+    test_dataset = PlanRecommendationDataset(test_data)  
+    # Create a dataloader for the test data
+    test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)  
+    total_loss = 0  # Initialize the total loss
+    
+    # Iterate over batches of test data
+    for batch in test_dataloader:
+        # Convert the batch to long tensor
+        batch = batch.to(torch.long)  
+        
+        # Create user and item indices
+        # Repeat each user index for each item
+        user_indices = torch.arange(num_zip_codes).repeat_interleave(num_plans)  
+        # Repeat each item index for each user
+        item_indices = torch.arange(num_plans).repeat(num_zip_codes)  
+        
+        # Make predictions
+        # Get the model predictions
+        predictions = model(user_indices, item_indices)  
+        
+        # Compute the loss
+        # Calculate the loss
+        loss = criterion(predictions, batch.view(-1))  
+        # Accumulate the total loss
+        total_loss += loss.item()  
+    
+    # Print the average loss for the test data
+    # Print the test loss
+    print(f'Test Loss: {total_loss / len(test_dataloader)}')  
+
+
+
+```
+
+
+## Step 5: Deployment
+:::danger 🤔
+***What we're doing*** : _We're putting the model to work. This means using the trained model to make recommendations on your website._
+:::
+
+:::tip 😯
+1. ***Save the model***: _We save the trained model so we can use it later without training again._
+2. ***Load and use the model***: _When a new resident visits your website and enters their zip code, the model looks at its learned patterns and suggests the two most popular plans for that zip code._
+:::
+
+```python
+
+# Save the trained model
+# Save the model parameters to a file
+torch.save(model.state_dict(), 'model.pth')  
+
+# Load the trained model for deployment
+# Create a new instance of the model
+model = MatrixFactorization(num_zip_codes, num_plans)  
+model.load_state_dict(torch.load('model.pth'))  # Load the saved model parameters
+model.eval()  # Set the model to evaluation mode
+
+# Function to get recommendations for a given zip code
+def get_recommendations(zip_code_index):
+    # Disable gradient calculations
+    with torch.no_grad():  
+        # Convert the zip code index to a tensor
+        user_idx = torch.tensor([zip_code_index], dtype=torch.long)  
+        # Create a tensor with all plan indices
+        item_indices = torch.arange(num_plans)  
+         # Get the model predictions for the zip code
+        predictions = model(user_idx, item_indices) 
+        # Get the indices of the top 2 plans
+        top_plans = torch.topk(predictions, k=2).indices  
+        # Convert the indices to a numpy array
+        return top_plans.numpy()  
+
+# Example usage
+# Replace with the actual index of the zip code
+zip_code_index = 0  
+# Print the recommended plans for the zip code
+print(get_recommendations(zip_code_index)) 
+
+
+```
